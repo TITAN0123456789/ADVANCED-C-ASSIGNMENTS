@@ -1,0 +1,287 @@
+ASSIGNMENT 2 ANSWERS:
+
+Question 1
+Program to Create Three Threads
+Requirements
+Thread A → Calculate sum of first N prime numbers
+Thread B → Print message every 2 seconds
+Thread C → Print message every 3 seconds
+Thread B and C execute in parallel
+
+Program:
+
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+
+int N;
+
+int isPrime(int num)
+{
+    if(num < 2)
+        return 0;
+
+    for(int i = 2; i * i <= num; i++)
+    {
+        if(num % i == 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+void* threadA(void *arg)
+{
+    int count = 0;
+    int num = 2;
+    long long sum = 0;
+
+    while(count < N)
+    {
+        if(isPrime(num))
+        {
+            sum += num;
+            count++;
+        }
+        num++;
+    }
+
+    printf("Sum of first %d prime numbers = %lld\n", N, sum);
+
+    pthread_exit(NULL);
+}
+
+void* threadB(void *arg)
+{
+    for(int i = 0; i < 50; i++)
+    {
+        printf("Thread 1 running\n");
+        sleep(2);
+    }
+
+    pthread_exit(NULL);
+}
+
+void* threadC(void *arg)
+{
+    for(int i = 0; i < 34; i++)
+    {
+        printf("Thread 2 running\n");
+        sleep(3);
+    }
+
+    pthread_exit(NULL);
+}
+
+int main()
+{
+    pthread_t t1, t2, t3;
+
+    printf("Enter N: ");
+    scanf("%d", &N);
+
+    pthread_create(&t1,NULL,threadA,NULL);
+    pthread_create(&t2,NULL,threadB,NULL);
+    pthread_create(&t3,NULL,threadC,NULL);
+
+    pthread_join(t1,NULL);
+    pthread_join(t2,NULL);
+    pthread_join(t3,NULL);
+
+    return 0;
+}
+
+Output:
+
+Enter N: 10
+
+Sum of first 10 prime numbers = 129
+
+Thread 1 running
+Thread 2 running
+Thread 1 running
+Thread 2 running
+Thread 1 running
+...
+
+Question 2
+Signal Handling Implementation
+Objective
+
+Prevent program termination when CTRL+C (SIGINT) is pressed.
+
+Program:
+
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+
+void signalHandler(int sig)
+{
+    printf("\nSIGINT Received. Termination prevented.\n");
+}
+
+int main()
+{
+    signal(SIGINT, signalHandler);
+
+    while(1)
+    {
+        printf("Program Running...\n");
+        sleep(2);
+    }
+
+    return 0;
+}
+
+Output:
+
+Program Running...
+Program Running...
+
+^C
+
+SIGINT Received. Termination prevented.
+
+Program Running...
+Program Running...
+
+Flow of Execution
+Thread Execution Flow
+Main Thread
+    |
+    |--- Thread A
+    |        |
+    |        --> Sum of N prime numbers
+    |
+    |--- Thread B
+    |        |
+    |        --> Executes every 2 seconds
+    |
+    |--- Thread C
+             |
+             --> Executes every 3 seconds
+Time Taken
+Thread A
+
+Prime computation complexity:
+
+O(N * sqrt(P))
+
+Where:
+
+N = number of primes required
+P = largest prime encountered
+Thread B
+50 iterations × 2 seconds
+= 100 seconds
+Thread C
+34 iterations × 3 seconds
+≈ 102 seconds
+Total Program Execution
+
+Approximately:
+
+102 seconds
+
+because threads execute concurrently.
+
+Question 3
+Notes on Explored Topics
+Child Process - fork()
+Definition
+
+fork() creates a new process called a child process.
+
+Example
+pid_t pid = fork();
+Behavior
+Parent Process
+      |
+      +---- Child Process
+Uses
+Process creation
+Server applications
+Background jobs
+Handling Common Signals
+
+Signals are software interrupts.
+
+Common Signals
+Signal	Description
+SIGINT	CTRL+C
+SIGTERM	Termination request
+SIGKILL	Force kill
+SIGSEGV	Segmentation fault
+SIGALRM	Timer expiration
+Example
+signal(SIGINT, handler);
+Exploring Kernel Crashes
+Kernel Panic
+
+Occurs when Linux kernel encounters unrecoverable errors.
+
+Causes
+Faulty device drivers
+Memory corruption
+Hardware failures
+Invalid kernel modules
+Symptoms
+Kernel Panic - Not Syncing
+System Halted
+Time Complexity
+Definition
+
+Measures execution time growth relative to input size.
+
+Common Complexities
+Complexity	Performance
+O(1)	Constant
+O(log n)	Logarithmic
+O(n)	Linear
+O(n²)	Quadratic
+Example
+Binary Search = O(log n)
+Linear Search = O(n)
+Locking Mechanisms
+Mutex
+
+Mutual Exclusion Lock.
+
+Purpose:
+
+Only one thread accesses shared resource at a time
+
+Example:
+
+pthread_mutex_lock();
+pthread_mutex_unlock();
+
+Advantages:
+
+Prevents race conditions
+Easy implementation
+Spinlock
+
+A thread continuously checks lock availability.
+
+Example:
+
+while(lock_busy)
+{
+    spin;
+}
+
+Advantages:
+
+Faster for very short waits
+
+Disadvantages:
+
+CPU intensive
+Difference Between Mutex and Spinlock
+Feature	Mutex	Spinlock
+Waiting	Sleeps	Busy Wait
+CPU Usage	Low	High
+Context Switch	Yes	No
+Best For	Long Waits	Short Waits
